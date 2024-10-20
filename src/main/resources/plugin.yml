@@ -1,0 +1,11 @@
+name: SimpleTimer
+version: '1.0.0'
+main: com.spectrasonic.SimpleTimer.Main
+api-version: '1.21'
+authors: [ Spectrasonic ]
+description: A Simple Timer for Minecraft Events
+commands:
+  timer:
+    description: Main timer command.
+    aliases: [tm]
+    usage: /<command> <start/pause/cancel/version>
