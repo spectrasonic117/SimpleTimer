@@ -13,7 +13,7 @@ public class TimerManager {
     private final JavaPlugin plugin;
     private BossBar bossBar;
     private BukkitRunnable timerTask;
-    private long timeLeft;
+    private long timeLeft;    // Time left in seconds
     private long initialTime;
     private boolean paused = false;
 
@@ -41,7 +41,7 @@ public class TimerManager {
                 if (timeLeft <= 0) {
                     bossBar.setTitle("Time's up!");
                     bossBar.setProgress(0);
-                    playEndSound(); // Play the sound when the timer ends
+                    playEndSound(); // Play sound when timer ends
 
                     new BukkitRunnable() {
                         @Override
@@ -55,7 +55,8 @@ public class TimerManager {
                     return;
                 }
 
-                bossBar.setTitle(title + " (" + timeLeft + " seconds left)");
+                String formattedTime = formatTime(timeLeft);
+                bossBar.setTitle(title + " (" + formattedTime + ")");
                 bossBar.setProgress((double) timeLeft / initialTime);
                 timeLeft--;
             }
@@ -95,5 +96,16 @@ public class TimerManager {
 
     private void playEndSound() {
         Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1.0f, 1.0f));
+    }
+
+    /**
+     * Formats the remaining time in hh:mm:ss format.
+     */
+    private String formatTime(long timeInSeconds) {
+        long hours = timeInSeconds / 3600;
+        long minutes = (timeInSeconds % 3600) / 60;
+        long seconds = timeInSeconds % 60;
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
