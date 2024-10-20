@@ -1,6 +1,7 @@
 package com.spectrasonic.SimpleTimer.commands;
 
 import com.spectrasonic.SimpleTimer.manager.TimerManager;
+import com.spectrasonic.SimpleTimer.Main;
 import com.spectrasonic.SimpleTimer.utils.ColorUtil;
 import com.spectrasonic.SimpleTimer.utils.TimeUtil;
 import org.bukkit.ChatColor;
@@ -15,18 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class TimerCommand implements CommandExecutor, TabCompleter {
+
+    public String Prefix = ChatColor.AQUA + "[SimpleTimer]" + ChatColor.RESET + " ";
 
     private final JavaPlugin plugin;
     private final TimerManager timerManager;
@@ -45,45 +39,52 @@ public class TimerCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase()) {
             case "version":
-                sender.sendMessage(ChatColor.GREEN + "SimpleTimer v1.0 by Spectrasonic");
+
+                String pluginName = plugin.getDescription().getName();
+                String pluginVersion = plugin.getDescription().getVersion();
+                String pluginAuthor = plugin.getDescription().getAuthors().toString();
+
+                sender.sendMessage(Prefix + ChatColor.WHITE + pluginName);
+                sender.sendMessage(Prefix + ChatColor.GREEN + "Version: " + ChatColor.LIGHT_PURPLE + pluginVersion);
+                sender.sendMessage(Prefix + ChatColor.GOLD + "Developed by " + ChatColor.RED + pluginAuthor);
                 return true;
 
             case "pause":
                 if (timerManager.isRunning()) {
                     timerManager.pauseTimer();
-                    sender.sendMessage(ChatColor.YELLOW + "Timer paused.");
+                    sender.sendMessage(Prefix + ChatColor.YELLOW + "Timer paused.");
                 } else {
-                    sender.sendMessage(ChatColor.RED + "No active timer to pause.");
+                    sender.sendMessage(Prefix + ChatColor.RED + "No active timer to pause.");
                 }
                 return true;
 
             case "resume":
                 if (timerManager.isPaused()) {
                     timerManager.resumeTimer();
-                    sender.sendMessage(ChatColor.GREEN + "Timer resumed.");
+                    sender.sendMessage(Prefix + ChatColor.GREEN + "Timer resumed.");
                 } else {
-                    sender.sendMessage(ChatColor.RED + "No paused timer to resume.");
+                    sender.sendMessage(Prefix + ChatColor.RED + "No paused timer to resume.");
                 }
                 return true;
 
             case "cancel":
                 if (timerManager.isRunning() || timerManager.isPaused()) {
                     timerManager.cancelTimer();
-                    sender.sendMessage(ChatColor.RED + "Timer canceled and removed.");
+                    sender.sendMessage(Prefix + ChatColor.RED + "Timer canceled and removed.");
                 } else {
-                    sender.sendMessage(ChatColor.RED + "No active or paused timer to cancel.");
+                    sender.sendMessage(Prefix + ChatColor.RED + "No active or paused timer to cancel.");
                 }
                 return true;
 
             default:
                 if (args.length < 3) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /timer <time> <title> <color>");
+                    sender.sendMessage(Prefix + ChatColor.RED + "Usage: /timer <time> <title> <color>");
                     return false;
                 }
 
                 long time = TimeUtil.parseTime(args[0]);
                 if (time <= 0) {
-                    sender.sendMessage(ChatColor.RED + "Invalid time format. Use [number][h/m/s]");
+                    sender.sendMessage(Prefix + ChatColor.RED + "Invalid time format. Use [number][h/m/s]");
                     return false;
                 }
 
@@ -91,12 +92,12 @@ public class TimerCommand implements CommandExecutor, TabCompleter {
                 String colorName = args[2].toUpperCase();
 
                 if (!ColorUtil.isValidColor(colorName)) {
-                    sender.sendMessage(ChatColor.RED + "Invalid color. Available colors: " + ColorUtil.getValidColors());
+                    sender.sendMessage(Prefix + ChatColor.RED + "Invalid color. Available colors: " + ColorUtil.getValidColors());
                     return false;
                 }
 
                 timerManager.startTimer(time, title, ColorUtil.getColor(colorName));
-                sender.sendMessage(ChatColor.GREEN + "Timer started for " + args[0] + " with title: " + title + " and color: " + colorName);
+                sender.sendMessage(Prefix + ChatColor.GREEN + "Timer started for " + args[0] + " with title: " + title + " and color: " + colorName);
                 return true;
         }
     }
