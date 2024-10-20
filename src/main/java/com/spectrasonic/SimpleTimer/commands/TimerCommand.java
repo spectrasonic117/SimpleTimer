@@ -1,76 +1,113 @@
 package com.spectrasonic.SimpleTimer.commands;
 
-import com.spectrasonic.SimpleTimer.managers.TimerManager;
-import com.spectrasonic.SimpleTimer.utils.TimeParser;
+import com.spectrasonic.SimpleTimer.manager.TimerManager;
+import com.spectrasonic.SimpleTimer.utils.ColorUtil;
+import com.spectrasonic.SimpleTimer.utils.TimeUtil;
 import org.bukkit.ChatColor;
-import org.bukkit.boss.BarColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
-public class TimerCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    private final Plugin plugin;
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class TimerCommand implements CommandExecutor, TabCompleter {
+
+    private final JavaPlugin plugin;
     private final TimerManager timerManager;
 
-    public TimerCommand(Plugin plugin, TimerManager timerManager) {
+    public TimerCommand(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.timerManager = timerManager;
+        this.timerManager = new TimerManager(plugin);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /timer <start/pause/cancel/version>");
+            sender.sendMessage(ChatColor.RED + "Usage: /timer <time> <title> <color>");
             return false;
         }
-
-        if (args[0].equalsIgnoreCase("version")) {
-            sender.sendMessage(ChatColor.GREEN + "SimpleTimer version: " + plugin.getDescription().getVersion());
-            return true;
-        }
-
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return false;
-        }
-
-        Player player = (Player) sender;
-        String timerLabel = args[1];
 
         switch (args[0].toLowerCase()) {
-            case "start":
-                if (args.length < 3) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /timer start <label> <time> <color(optional)>");
-                    return false;
-                }
-                long timeInSeconds = TimeParser.parseTime(args[2]); // Using TimeParser utility
-                BarColor color = args.length > 3 ? parseColor(args[3]) : BarColor.WHITE;
-                timerManager.startTimer(player, timerLabel, timeInSeconds, color);
-                break;
+            case "version":
+                sender.sendMessage(ChatColor.GREEN + "SimpleTimer v1.0 by Spectrasonic");
+                return true;
 
             case "pause":
-                timerManager.pauseTimer(player, timerLabel);
-                break;
+                if (timerManager.isRunning()) {
+                    timerManager.pauseTimer();
+                    sender.sendMessage(ChatColor.YELLOW + "Timer paused.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "No active timer to pause.");
+                }
+                return true;
+
+            case "resume":
+                if (timerManager.isPaused()) {
+                    timerManager.resumeTimer();
+                    sender.sendMessage(ChatColor.GREEN + "Timer resumed.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "No paused timer to resume.");
+                }
+                return true;
 
             case "cancel":
-                timerManager.cancelTimer(player, timerLabel);
-                break;
+                if (timerManager.isRunning() || timerManager.isPaused()) {
+                    timerManager.cancelTimer();
+                    sender.sendMessage(ChatColor.RED + "Timer canceled and removed.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "No active or paused timer to cancel.");
+                }
+                return true;
 
             default:
-                sender.sendMessage(ChatColor.RED + "Unknown command. Use /timer <start/pause/cancel/version>.");
-                break;
+                if (args.length < 3) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /timer <time> <title> <color>");
+                    return false;
+                }
+
+                long time = TimeUtil.parseTime(args[0]);
+                if (time <= 0) {
+                    sender.sendMessage(ChatColor.RED + "Invalid time format. Use [number][h/m/s]");
+                    return false;
+                }
+
+                String title = args[1];
+                String colorName = args[2].toUpperCase();
+
+                if (!ColorUtil.isValidColor(colorName)) {
+                    sender.sendMessage(ChatColor.RED + "Invalid color. Available colors: " + ColorUtil.getValidColors());
+                    return false;
+                }
+
+                timerManager.startTimer(time, title, ColorUtil.getColor(colorName));
+                sender.sendMessage(ChatColor.GREEN + "Timer started for " + args[0] + " with title: " + title + " and color: " + colorName);
+                return true;
         }
-        return true;
     }
 
-    private BarColor parseColor(String color) {
-        try {
-            return BarColor.valueOf(color.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return BarColor.WHITE; // Default color
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return Arrays.asList("version", "pause", "resume", "cancel", "10s", "1m", "1h");
+        } else if (args.length == 3) {
+            return ColorUtil.getValidColorsList();
         }
+        return new ArrayList<>();
     }
 }
