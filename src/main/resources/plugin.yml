@@ -1,5 +1,5 @@
 name: SimpleTimer
-version: '1.0.4'
+version: '${version}'
 main: com.spectrasonic.SimpleTimer.Main
 api-version: '1.21'
 authors: [ Spectrasonic ]
